@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0060)file:///C:/Users/Rob/Downloads/grubb-calendar-CLICKABLE.html -->
+<!-- saved from url=(0064)file:///C:/Users/Rob/Downloads/grubb-calendar-WORKING-FINAL.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2120,9 +2120,11 @@ function selectDate(dateStr) {
 }
 
 function viewEvent(eventId) {
-    console.log('🔍 viewEvent called with ID:', eventId);
+    console.log('🔍 viewEvent called with ID:', eventId, typeof eventId);
     console.log('📋 All events:', events);
-    const event = events.find(e => e.id === eventId);
+    
+    // Convert to string for comparison since IDs might be numbers or strings
+    const event = events.find(e => String(e.id) === String(eventId));
     console.log('✅ Found event:', event);
     
     if (!event) {
@@ -2149,7 +2151,8 @@ function viewEvent(eventId) {
 }
 
 function viewCarBooking(bookingId) {
-    const booking = carBookings.find(b => b.id === bookingId);
+    // Convert to string for comparison since IDs might be numbers or strings
+    const booking = carBookings.find(b => String(b.id) === String(bookingId));
     if (!booking) return;
     
     // Populate the modal with booking data
