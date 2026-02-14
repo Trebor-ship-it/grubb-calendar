@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0058)file:///C:/Users/Rob/Downloads/grubb-calendar-WORKING.html -->
+<!-- saved from url=(0062)file:///C:/Users/Rob/Downloads/grubb-calendar-final-dates.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1386,8 +1386,11 @@
 
             <!-- Meal Plan Tab -->
             <div class="tab-content" id="meals">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>Weekly Meal Plan</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h2 style="margin-bottom: 5px;">Weekly Meal Plan</h2>
+                        <p id="weekRange" style="color: #6c757d; font-size: 0.95em; margin: 0;"></p>
+                    </div>
                     <div>
                         <button class="nav-btn" id="prevWeek">← Previous Week</button>
                         <button class="nav-btn" id="nextWeek">Next Week →</button>
@@ -2026,6 +2029,16 @@ function renderMealPlan() {
     const diff = (day === 0 ? -6 : 1) - day;
     startOfWeek.setDate(startOfWeek.getDate() + diff);
     
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    // Update week range display
+    const weekRangeText = `${startOfWeek.getDate()} ${startOfWeek.toLocaleString('en-GB', { month: 'short' })} - ${endOfWeek.getDate()} ${endOfWeek.toLocaleString('en-GB', { month: 'short' })} ${endOfWeek.getFullYear()}`;
+    const weekRangeEl = document.getElementById('weekRange');
+    if (weekRangeEl) {
+        weekRangeEl.textContent = weekRangeText;
+    }
+    
     let html = '';
     
     for (let i = 0; i < 7; i++) {
@@ -2033,11 +2046,15 @@ function renderMealPlan() {
         currentDay.setDate(startOfWeek.getDate() + i);
         const dateStr = `${currentDay.getFullYear()}-${String(currentDay.getMonth() + 1).padStart(2, '0')}-${String(currentDay.getDate()).padStart(2, '0')}`;
         
+        // Format date for display (e.g., "14 Feb")
+        const displayDate = `${currentDay.getDate()} ${currentDay.toLocaleString('en-GB', { month: 'short' })}`;
+        
         const meal = meals[dateStr] || { dinner: '' };
         
         html += `
             <div class="meal-day">
                 <h3>${days[i]}</h3>
+                <div style="color: #667eea; font-size: 1em; font-weight: 600; margin-bottom: 10px;">${displayDate}</div>
                 <div class="meal-inputs">
                     <div class="meal-input-group">
                         <label>Dinner:</label>
