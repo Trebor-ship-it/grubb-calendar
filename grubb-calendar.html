@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0066)file:///C:/Users/Rob/Downloads/grubb-calendar-ready-to-upload.html -->
+<!-- saved from url=(0053)file:///C:/Users/Rob/Downloads/family-calendar_8.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1255,7 +1255,7 @@
 </head>
 <body>
     <!-- Login Screen -->
-    <div class="login-container" id="loginContainer">
+    <div class="login-container hidden" id="loginContainer">
         <div class="login-box">
             <div class="login-header">
                 <h1>🏠 Grubb</h1>
@@ -1270,7 +1270,7 @@
     </div>
 
     <!-- Main App (hidden until logged in) -->
-    <div class="container hidden" id="mainApp">
+    <div class="container" id="mainApp">
         <div class="header">
         </div>
 
@@ -1585,7 +1585,7 @@
 
     <script>
         // CONFIGURATION 
-const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjt6l_trdjXOBRTs9tvpIL_UC4hTzHMLYT5L9EAUh_dg9aF8LUlYy2R6gF2M778wlo/exec'; // Paste your Google Apps Script Web App URL here
+const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPRnoQaoBPVQXufCyazRJtY1tq37zb0ZIoannhy65MiIR1R33T_PcUWsjIQDSBUrYS/exec'; // Paste your Google Apps Script Web App URL here
 
 // Password and session management
 const FAMILY_PASSWORD = 'finlakes';
@@ -1739,6 +1739,30 @@ function normalizeDate(dateStr) {
         return dateStr.split('T')[0];
     }
     return dateStr;
+}
+
+// Helper function to format time (handles both "10:00" and "1899-12-30T10:00:00.000Z")
+function formatTime(timeStr) {
+    if (!timeStr) return '';
+    
+    // If it's already in HH:MM format, return it
+    if (typeof timeStr === 'string' && /^\d{1,2}:\d{2}$/.test(timeStr)) {
+        return timeStr;
+    }
+    
+    // If it's an ISO timestamp, extract just the time part
+    if (typeof timeStr === 'string' && timeStr.includes('T')) {
+        const timePart = timeStr.split('T')[1];
+        if (timePart) {
+            // Extract HH:MM from HH:MM:SS.sssZ
+            const match = timePart.match(/(\d{2}):(\d{2})/);
+            if (match) {
+                return `${match[1]}:${match[2]}`;
+            }
+        }
+    }
+    
+    return timeStr;
 }
 
 // User colors
@@ -2164,15 +2188,21 @@ function renderCarBookings() {
         return a.startTime.localeCompare(b.startTime);
     });
     
-    const html = sortedBookings.map(booking => `
+    const html = sortedBookings.map(booking => {
+        const displayDate = normalizeDate(booking.date);
+        const displayStartTime = formatTime(booking.startTime);
+        const displayEndTime = formatTime(booking.endTime);
+        
+        return `
         <div class="booking-slot" style="border-left-color: ${userColors[booking.user]}">
-            <div>${booking.date}</div>
-            <div>${booking.startTime} - ${booking.endTime}</div>
+            <div>${displayDate}</div>
+            <div><strong>${displayStartTime} - ${displayEndTime}</strong></div>
             <div>${booking.purpose}</div>
             <div class="booked-by" style="color: ${userColors[booking.user]}">${booking.user}</div>
             <button class="delete-btn" onclick="deleteCarBooking('${booking.id}')">Delete</button>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     document.getElementById('carBookings').innerHTML = html || '<p style="text-align: center; color: #6c757d; padding: 40px;">No bookings yet. Click "+ New Booking" to add one!</p>';
 }
