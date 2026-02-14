@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0056)file:///C:/Users/Rob/Downloads/grubb-calendar-debug.html -->
+<!-- saved from url=(0058)file:///C:/Users/Rob/Downloads/grubb-calendar-WORKING.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1728,6 +1728,16 @@ function getSchoolHoliday(dateStr) {
 }
 
 // Family Contacts Data
+// Helper function to normalize dates (handles both "2026-02-14" and "2026-02-14T00:00:00.000Z")
+function normalizeDate(dateStr) {
+    if (!dateStr) return '';
+    // If it's an ISO timestamp, extract just the date part
+    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        return dateStr.split('T')[0];
+    }
+    return dateStr;
+}
+
 // User colors
 const userColors = {
     'Everyone': '#667eea',
@@ -1890,9 +1900,9 @@ function renderMonthView(year, month) {
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
-        const dayEvents = events.filter(e => e.date === dateStr);
+        const dayEvents = events.filter(e => normalizeDate(e.date) === dateStr);
         const dayMeal = meals[dateStr];
-        const dayBookings = carBookings.filter(b => b.date === dateStr);
+        const dayBookings = carBookings.filter(b => normalizeDate(b.date) === dateStr);
         const bankHoliday = ukBankHolidays[dateStr];
         const schoolHoliday = getSchoolHoliday(dateStr);
         
@@ -1963,9 +1973,9 @@ function renderWeekView() {
         
         const dateStr = `${currentDay.getFullYear()}-${String(currentDay.getMonth() + 1).padStart(2, '0')}-${String(currentDay.getDate()).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
-        const dayEvents = events.filter(e => e.date === dateStr);
+        const dayEvents = events.filter(e => normalizeDate(e.date) === dateStr);
         const dayMeal = meals[dateStr];
-        const dayBookings = carBookings.filter(b => b.date === dateStr);
+        const dayBookings = carBookings.filter(b => normalizeDate(b.date) === dateStr);
         const bankHoliday = ukBankHolidays[dateStr];
         const schoolHoliday = getSchoolHoliday(dateStr);
         
