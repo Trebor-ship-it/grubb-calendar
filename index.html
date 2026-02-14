@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0058)file:///C:/Users/Rob/Downloads/grubb-calendar-FINAL_2.html -->
+<!-- saved from url=(0066)file:///C:/Users/Rob/Downloads/grubb-calendar-mobile-improved.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1011,33 +1011,48 @@
             }
 
             .calendar-grid {
-                gap: 3px;
-                grid-template-columns: repeat(7, 50px);
+                gap: 4px;
+                grid-template-columns: repeat(7, 70px);
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
 
             .day-header {
-                padding: 6px 2px;
-                font-size: 0.65em;
-                width: 50px;
+                padding: 8px 4px;
+                font-size: 0.75em;
+                width: 70px;
             }
 
             .day-cell {
-                min-height: 60px;
-                width: 50px;
-                padding: 3px 2px;
-                font-size: 0.7em;
+                min-height: 90px;
+                width: 70px;
+                padding: 5px 3px;
+                font-size: 0.85em;
             }
 
             .day-number {
-                font-size: 1em;
+                font-size: 1.2em;
+                font-weight: bold;
+                cursor: pointer;
+                padding: 6px;
+                border-radius: 50%;
+                display: inline-block;
+                min-width: 28px;
+                text-align: center;
+                margin-bottom: 4px;
+            }
+
+            .day-number:active {
+                background: rgba(102, 126, 234, 0.2);
             }
 
             .event-item {
                 font-size: 0.7em;
-                padding: 2px 3px;
-                margin: 1px 0;
+                padding: 3px 4px;
+                margin: 2px 0;
+                line-height: 1.2;
+                cursor: default;
+                pointer-events: none;
             }
 
             .meal-day {
@@ -1585,7 +1600,7 @@
 
     <script>
         // CONFIGURATION 
-const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjt6l_trdjXOBRTs9tvpIL_UC4hTzHMLYT5L9EAUh_dg9aF8LUlYy2R6gF2M778wlo/exec'; // Paste your Google Apps Script Web App URL here
+const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPRnoQaoBPVQXufCyazRJtY1tq37zb0ZIoannhy65MiIR1R33T_PcUWsjIQDSBUrYS/exec'; // Paste your Google Apps Script Web App URL here
 
 // Password and session management
 const FAMILY_PASSWORD = 'finlakes';
@@ -1962,8 +1977,8 @@ function renderMonthView(year, month) {
         });
         
         html += `
-            <div class="day-cell ${isToday ? 'today' : ''}" onclick="selectDate('${dateStr}')">
-                <div class="day-number">${day}</div>
+            <div class="day-cell ${isToday ? 'today' : ''}">
+                <div class="day-number" onclick="selectDate('${dateStr}')">${day}</div>
                 ${eventsHtml}
             </div>
         `;
@@ -2030,8 +2045,8 @@ function renderWeekView() {
         });
         
         html += `
-            <div class="day-cell ${isToday ? 'today' : ''}" onclick="selectDate('${dateStr}')">
-                <div class="day-number">${currentDay.getDate()}</div>
+            <div class="day-cell ${isToday ? 'today' : ''}">
+                <div class="day-number" onclick="selectDate('${dateStr}')">${currentDay.getDate()}</div>
                 ${eventsHtml}
             </div>
         `;
