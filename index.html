@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0056)file:///C:/Users/Rob/Downloads/grubb-calendar-READY.html -->
+<!-- saved from url=(0055)file:///C:/Users/Rob/Downloads/grubb-calendar-FAST.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1794,6 +1794,44 @@ const userColors = {
 // Car image (base64)
 const carImageData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
+// ============= SMART CACHING FOR SPEED =============
+
+function saveToCache() {
+    const cacheData = {
+        events,
+        meals,
+        shoppingList,
+        carBookings,
+        timestamp: Date.now()
+    };
+    localStorage.setItem('calendarCache', JSON.stringify(cacheData));
+}
+
+function loadFromCache() {
+    const cached = localStorage.getItem('calendarCache');
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            events = data.events || [];
+            meals = data.meals || {};
+            shoppingList = data.shoppingList || [];
+            carBookings = data.carBookings || [];
+            return true;
+        } catch (e) {
+            console.error('Cache load error:', e);
+        }
+    }
+    return false;
+}
+
+function updateCacheAndUI() {
+    saveToCache();
+    renderCalendar();
+    renderMealPlan();
+    renderShoppingList();
+    renderCarBookings();
+}
+
 // ============= GOOGLE SHEETS INTEGRATION =============
 
 async function syncWithSheets(action, data = {}) {
@@ -1831,63 +1869,117 @@ async function loadDataFromSheets() {
         shoppingList = result.shoppingList || [];
         carBookings = result.carBookings || [];
         
-        // Debug logging
-        console.log('📊 Data loaded from sheets:');
-        console.log('Events:', events.length);
-        console.log('Meals:', Object.keys(meals).length);
-        console.log('Meals data:', meals);
-        console.log('Shopping:', shoppingList.length);
-        console.log('Car Bookings:', carBookings.length);
-        console.log('Car Bookings data:', carBookings);
+        // Save to cache for next time
+        saveToCache();
         
-        // Render everything after data is loaded
+        // Update UI silently in background
         renderCalendar();
         renderMealPlan();
         renderShoppingList();
         renderCarBookings();
+        
+        console.log('🔄 Data synced from Google Sheets');
     }
     
     return result;
 }
 
 async function saveEventToSheets(event) {
-    await syncWithSheets('saveEvent', event);
-    await loadDataFromSheets();
+    // Add to local array instantly
+    events.push(event);
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('saveEvent', event).then(() => {
+        console.log('✅ Event synced to Google Sheets');
+    });
 }
 
 async function saveMealToSheets(date, dinner) {
-    await syncWithSheets('saveMeal', { date, dinner });
-    await loadDataFromSheets();
+    // Update local data instantly
+    meals[date] = { dinner };
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('saveMeal', { date, dinner }).then(() => {
+        console.log('✅ Meal synced to Google Sheets');
+    });
 }
 
 async function saveShoppingItemToSheets(item) {
-    await syncWithSheets('saveShoppingItem', item);
-    await loadDataFromSheets();
+    // Add to local array instantly
+    shoppingList.push(item);
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('saveShoppingItem', item).then(() => {
+        console.log('✅ Shopping item synced to Google Sheets');
+    });
 }
 
 async function updateShoppingItemInSheets(id, checked) {
-    await syncWithSheets('updateShoppingItem', { id, checked });
-    await loadDataFromSheets();
+    // Update local array instantly
+    const item = shoppingList.find(i => i.id === id);
+    if (item) {
+        item.checked = checked;
+        updateCacheAndUI();
+    }
+    
+    // Sync to sheets in background
+    syncWithSheets('updateShoppingItem', { id, checked }).then(() => {
+        console.log('✅ Shopping item updated in Google Sheets');
+    });
 }
 
 async function deleteShoppingItemFromSheets(id) {
-    await syncWithSheets('deleteShoppingItem', { id });
-    await loadDataFromSheets();
+    // Remove from local array instantly
+    shoppingList = shoppingList.filter(item => item.id !== id);
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('deleteShoppingItem', { id }).then(() => {
+        console.log('✅ Shopping item deleted from Google Sheets');
+    });
 }
 
 async function saveCarBookingToSheets(booking) {
-    await syncWithSheets('saveCarBooking', booking);
-    await loadDataFromSheets();
+    // Add to local array instantly
+    carBookings.push(booking);
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('saveCarBooking', booking).then(() => {
+        console.log('✅ Car booking synced to Google Sheets');
+    });
 }
 
 async function deleteCarBookingFromSheets(id) {
-    await syncWithSheets('deleteCarBooking', { id });
-    await loadDataFromSheets();
+    // Remove from local array instantly
+    carBookings = carBookings.filter(booking => booking.id !== id);
+    updateCacheAndUI();
+    
+    // Sync to sheets in background
+    syncWithSheets('deleteCarBooking', { id }).then(() => {
+        console.log('✅ Car booking deleted from Google Sheets');
+    });
 }
 
 // Fallback to localStorage if Google Sheets not configured
 function loadData() {
     if (GOOGLE_SHEETS_SCRIPT_URL) {
+        // Load from cache FIRST for instant display
+        const hasCache = loadFromCache();
+        
+        if (hasCache) {
+            console.log('⚡ Loaded from cache (instant)');
+            // Render immediately from cache
+            renderCalendar();
+            renderMealPlan();
+            renderShoppingList();
+            renderCarBookings();
+        }
+        
+        // Then sync from Google Sheets in background
         loadDataFromSheets();
     } else {
         events = JSON.parse(localStorage.getItem('events') || '[]');
@@ -2522,7 +2614,7 @@ function initializeApp() {
     
     // Auto-refresh data every 30 seconds if using Google Sheets
     if (GOOGLE_SHEETS_SCRIPT_URL) {
-        setInterval(loadDataFromSheets, 30000);
+        setInterval(loadDataFromSheets, 120000); // Sync every 2 minutes
     }
 }
 
