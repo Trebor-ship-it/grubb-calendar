@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0064)file:///C:/Users/Rob/Downloads/grubb-calendar-everyone-view.html -->
+<!-- saved from url=(0062)file:///C:/Users/Rob/Downloads/grubb-calendar-booking-fix.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1779,11 +1779,14 @@ async function loadDataFromSheets() {
         shoppingList = result.shoppingList || [];
         carBookings = result.carBookings || [];
         
+        // Render everything after data is loaded
         renderCalendar();
         renderMealPlan();
         renderShoppingList();
         renderCarBookings();
     }
+    
+    return result;
 }
 
 async function saveEventToSheets(event) {
@@ -2151,6 +2154,8 @@ async function saveCarBooking() {
     
     if (GOOGLE_SHEETS_SCRIPT_URL) {
         await saveCarBookingToSheets(booking);
+        // Explicitly render calendar after loading new data
+        renderCalendar();
     } else {
         carBookings.push(booking);
         saveData();
