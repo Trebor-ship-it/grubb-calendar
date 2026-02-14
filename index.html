@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0055)file:///C:/Users/Rob/Downloads/grubb-calendar-FAST.html -->
+<!-- saved from url=(0059)file:///C:/Users/Rob/Downloads/grubb-calendar-COMPLETE.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1564,17 +1564,6 @@
         <div class="modal-content">
             <h2>Book Car</h2>
             <div class="form-group">
-                <label>Who needs the car?</label>
-                <select id="bookingUser">
-                    <option value="Mum">Mum</option>
-                    <option value="Dad">Dad</option>
-                    <option value="Anna">Anna</option>
-                    <option value="Cate">Cate</option>
-                    <option value="Dylan">Dylan</option>
-                    <option value="Imogen">Imogen</option>
-                </select>
-            </div>
-            <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="bookingDate">
             </div>
@@ -1587,8 +1576,8 @@
                 <input type="time" id="bookingEnd">
             </div>
             <div class="form-group">
-                <label>Purpose</label>
-                <input type="text" id="bookingPurpose" placeholder="e.g., School pickup, Shopping">
+                <label>Who needs the car?</label>
+                <input type="text" id="bookingPurpose" placeholder="e.g., Mum, Dad, Anna, Cate, Dylan, Imogen">
             </div>
             <div class="modal-actions">
                 <button class="cancel-btn" id="closeBookingModal">Cancel</button>
@@ -2178,11 +2167,10 @@ function viewCarBooking(bookingId) {
     if (!booking) return;
     
     // Populate the modal with booking data
-    document.getElementById('bookingUser').value = booking.user;
     document.getElementById('bookingDate').value = normalizeDate(booking.date);
     document.getElementById('bookingStart').value = formatTime(booking.startTime);
     document.getElementById('bookingEnd').value = formatTime(booking.endTime);
-    document.getElementById('bookingPurpose').value = booking.purpose;
+    document.getElementById('bookingPurpose').value = booking.purpose;  // This now shows who needs the car
     
     // Store the booking ID for updating
     document.getElementById('bookingModal').dataset.bookingId = bookingId;
@@ -2358,7 +2346,6 @@ async function saveCarBooking() {
     const startTime = document.getElementById('bookingStart').value;
     const endTime = document.getElementById('bookingEnd').value;
     const purpose = document.getElementById('bookingPurpose').value;
-    const user = document.getElementById('bookingUser').value;
     const modal = document.getElementById('bookingModal');
     const existingBookingId = modal.dataset.bookingId;
     
@@ -2377,7 +2364,7 @@ async function saveCarBooking() {
                 startTime,
                 endTime,
                 purpose,
-                user
+                user: purpose  // User is now the same as purpose
             };
             
             if (GOOGLE_SHEETS_SCRIPT_URL) {
@@ -2399,7 +2386,7 @@ async function saveCarBooking() {
             startTime,
             endTime,
             purpose,
-            user: user
+            user: purpose  // User is now the same as purpose
         };
         
         if (GOOGLE_SHEETS_SCRIPT_URL) {
@@ -2418,7 +2405,6 @@ async function saveCarBooking() {
     document.getElementById('bookingStart').value = '';
     document.getElementById('bookingEnd').value = '';
     document.getElementById('bookingPurpose').value = '';
-    document.getElementById('bookingUser').value = 'Mum';
 }
 
 async function deleteCarBooking(id) {
