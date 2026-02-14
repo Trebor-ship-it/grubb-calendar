@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0059)file:///C:/Users/Rob/Downloads/grubb-calendar-mobile_1.html -->
+<!-- saved from url=(0064)file:///C:/Users/Rob/Downloads/grubb-calendar-everyone-view.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -422,9 +422,17 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(80px, 1fr));
             gap: 10px;
             margin-top: 20px;
+        }
+
+        /* Calendar scroll wrapper for mobile */
+        @media (max-width: 768px) {
+            #calendar {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
 
         .day-header {
@@ -1003,18 +1011,23 @@
             }
 
             .calendar-grid {
-                gap: 4px;
+                gap: 3px;
+                grid-template-columns: repeat(7, 50px);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .day-header {
-                padding: 8px 4px;
-                font-size: 0.85em;
+                padding: 6px 2px;
+                font-size: 0.65em;
+                width: 50px;
             }
 
             .day-cell {
-                min-height: 70px;
-                padding: 6px;
-                font-size: 0.85em;
+                min-height: 60px;
+                width: 50px;
+                padding: 3px 2px;
+                font-size: 0.7em;
             }
 
             .day-number {
@@ -1106,7 +1119,12 @@
             }
 
             .event-item {
-                font-size: 0.65em;
+                font-size: 0.55em;
+                padding: 1px 2px;
+                margin: 1px 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .calendar-nav {
@@ -1254,25 +1272,13 @@
     <!-- Main App (hidden until logged in) -->
     <div class="container hidden" id="mainApp">
         <div class="header">
-            <div class="user-selector">
-                <button class="user-btn everyone-btn active" data-user="Everyone">👨‍👩‍👧‍👦 Everyone</button>
-                <div class="user-selector-grid">
-                    <button class="user-btn" data-user="Mum">Mum</button>
-                    <button class="user-btn" data-user="Dad">Dad</button>
-                    <button class="user-btn" data-user="Anna">Anna</button>
-                    <button class="user-btn" data-user="Cate">Cate</button>
-                    <button class="user-btn" data-user="Dylan">Dylan</button>
-                    <button class="user-btn" data-user="Imogen">Imogen</button>
-                </div>
-            </div>
-            
         </div>
 
         <div class="tabs">
             <button class="tab active" data-tab="calendar">📅 Calendar</button>
+            <button class="tab" data-tab="car">🚗 Car Bookings</button>
             <button class="tab" data-tab="meals">🍽️ Meal Plan</button>
             <button class="tab" data-tab="shopping">🛒 Shopping List</button>
-            <button class="tab" data-tab="car">🚗 Car Bookings</button>
         </div>
 
         <div class="content">
@@ -1499,6 +1505,18 @@
                 <input type="text" id="eventTitle" placeholder="e.g., Family Holiday">
             </div>
             <div class="form-group">
+                <label>For</label>
+                <select id="eventUser">
+                    <option value="Everyone">Everyone</option>
+                    <option value="Mum">Mum</option>
+                    <option value="Dad">Dad</option>
+                    <option value="Anna">Anna</option>
+                    <option value="Cate">Cate</option>
+                    <option value="Dylan">Dylan</option>
+                    <option value="Imogen">Imogen</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="eventDate">
             </div>
@@ -1527,6 +1545,17 @@
     <div class="modal" id="bookingModal">
         <div class="modal-content">
             <h2>Book Car</h2>
+            <div class="form-group">
+                <label>Who needs the car?</label>
+                <select id="bookingUser">
+                    <option value="Mum">Mum</option>
+                    <option value="Dad">Dad</option>
+                    <option value="Anna">Anna</option>
+                    <option value="Cate">Cate</option>
+                    <option value="Dylan">Dylan</option>
+                    <option value="Imogen">Imogen</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label>Date</label>
                 <input type="date" id="bookingDate">
@@ -1850,9 +1879,9 @@ function renderMonthView(year, month) {
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
-        const dayEvents = events.filter(e => e.date === dateStr && (currentUser === 'Everyone' || e.user === currentUser));
+        const dayEvents = events.filter(e => e.date === dateStr);
         const dayMeal = meals[dateStr];
-        const dayBookings = carBookings.filter(b => b.date === dateStr && (currentUser === 'Everyone' || b.user === currentUser));
+        const dayBookings = carBookings.filter(b => b.date === dateStr);
         const bankHoliday = ukBankHolidays[dateStr];
         const schoolHoliday = getSchoolHoliday(dateStr);
         
@@ -1918,9 +1947,9 @@ function renderWeekView() {
         
         const dateStr = `${currentDay.getFullYear()}-${String(currentDay.getMonth() + 1).padStart(2, '0')}-${String(currentDay.getDate()).padStart(2, '0')}`;
         const isToday = dateStr === todayStr;
-        const dayEvents = events.filter(e => e.date === dateStr && (currentUser === 'Everyone' || e.user === currentUser));
+        const dayEvents = events.filter(e => e.date === dateStr);
         const dayMeal = meals[dateStr];
-        const dayBookings = carBookings.filter(b => b.date === dateStr && (currentUser === 'Everyone' || b.user === currentUser));
+        const dayBookings = carBookings.filter(b => b.date === dateStr);
         const bankHoliday = ukBankHolidays[dateStr];
         const schoolHoliday = getSchoolHoliday(dateStr);
         
@@ -2086,11 +2115,7 @@ function renderCarBookings() {
         return a.startTime.localeCompare(b.startTime);
     });
     
-    const filteredBookings = sortedBookings.filter(b => 
-        currentUser === 'Everyone' || b.user === currentUser
-    );
-    
-    const html = filteredBookings.map(booking => `
+    const html = sortedBookings.map(booking => `
         <div class="booking-slot" style="border-left-color: ${userColors[booking.user]}">
             <div>${booking.date}</div>
             <div>${booking.startTime} - ${booking.endTime}</div>
@@ -2108,6 +2133,7 @@ async function saveCarBooking() {
     const startTime = document.getElementById('bookingStart').value;
     const endTime = document.getElementById('bookingEnd').value;
     const purpose = document.getElementById('bookingPurpose').value;
+    const user = document.getElementById('bookingUser').value;
     
     if (!date || !startTime || !endTime || !purpose) {
         alert('Please fill in all fields');
@@ -2120,7 +2146,7 @@ async function saveCarBooking() {
         startTime,
         endTime,
         purpose,
-        user: currentUser
+        user: user
     };
     
     if (GOOGLE_SHEETS_SCRIPT_URL) {
@@ -2137,6 +2163,7 @@ async function saveCarBooking() {
     document.getElementById('bookingStart').value = '';
     document.getElementById('bookingEnd').value = '';
     document.getElementById('bookingPurpose').value = '';
+    document.getElementById('bookingUser').value = 'Mum';
 }
 
 async function deleteCarBooking(id) {
@@ -2159,6 +2186,7 @@ async function saveEvent() {
     const date = document.getElementById('eventDate').value;
     const type = document.getElementById('eventType').value;
     const notes = document.getElementById('eventNotes').value;
+    const user = document.getElementById('eventUser').value;
     
     if (!title || !date) {
         alert('Please fill in title and date');
@@ -2171,7 +2199,7 @@ async function saveEvent() {
         date,
         type,
         notes,
-        user: currentUser,
+        user: user,
         created: new Date().toISOString()
     };
     
@@ -2188,6 +2216,7 @@ async function saveEvent() {
     document.getElementById('eventDate').value = '';
     document.getElementById('eventType').value = 'holiday';
     document.getElementById('eventNotes').value = '';
+    document.getElementById('eventUser').value = 'Everyone';
 }
 
 // ============= NAVIGATION =============
@@ -2215,18 +2244,6 @@ function navigateWeek(direction) {
 // ============= EVENT LISTENERS =============
 
 function setupEventListeners() {
-    // User selector
-    document.querySelectorAll('.user-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentUser = btn.dataset.user;
-            renderCalendar();
-            renderShoppingList();
-            renderCarBookings();
-        });
-    });
-
     // Tabs
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
