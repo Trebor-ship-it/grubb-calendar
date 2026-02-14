@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0066)file:///C:/Users/Rob/Downloads/grubb-calendar-mobile-improved.html -->
+<!-- saved from url=(0056)file:///C:/Users/Rob/Downloads/grubb-calendar-READY.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1969,11 +1969,11 @@ function renderMonthView(year, month) {
         }
         
         dayEvents.forEach(event => {
-            eventsHtml += `<div class="event-item" style="border-left-color: ${userColors[event.user]}">${event.title}</div>`;
+            eventsHtml += `<div class="event-item" style="border-left-color: ${userColors[event.user]}<span style="cursor: pointer;" onclick="event.stopPropagation(); viewEvent('${event.id}')">${event.title}</span></div>`;
         });
         
         dayBookings.forEach(booking => {
-            eventsHtml += `<div class="event-item car-booking" style="border-left-color: ${userColors[booking.user]}">🚗 ${booking.purpose}</div>`;
+            eventsHtml += `<div class="event-item car-booking" style="border-left-color: ${userColors[booking.user]}"onclick="event.stopPropagation(); viewCarBooking('${booking.id}'); return false;" style="cursor: pointer;">🚗 ${booking.purpose}</div>`;
         });
         
         html += `
@@ -2037,11 +2037,11 @@ function renderWeekView() {
         }
         
         dayEvents.forEach(event => {
-            eventsHtml += `<div class="event-item" style="border-left-color: ${userColors[event.user]}">${event.title}</div>`;
+            eventsHtml += `<div class="event-item" style="border-left-color: ${userColors[event.user]}"onclick="event.stopPropagation(); viewEvent('${event.id}'); return false;" style="cursor: pointer;">${event.title}</div>`;
         });
         
         dayBookings.forEach(booking => {
-            eventsHtml += `<div class="event-item car-booking" style="border-left-color: ${userColors[booking.user]}">🚗 ${booking.purpose}</div>`;
+            eventsHtml += `<div class="event-item car-booking" style="border-left-color: ${userColors[booking.user]}"onclick="event.stopPropagation(); viewCarBooking('${booking.id}'); return false;" style="cursor: pointer;">🚗 ${booking.purpose}</div>`;
         });
         
         html += `
@@ -2058,6 +2058,45 @@ function renderWeekView() {
 function selectDate(dateStr) {
     document.getElementById('eventDate').value = dateStr;
     document.getElementById('eventModal').classList.add('active');
+}
+
+function viewEvent(eventId) {
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+    
+    // Populate the modal with event data
+    document.getElementById('eventTitle').value = event.title;
+    document.getElementById('eventUser').value = event.user;
+    document.getElementById('eventDate').value = event.date;
+    document.getElementById('eventType').value = event.type;
+    document.getElementById('eventNotes').value = event.notes || '';
+    
+    // Change modal title to "Edit Event"
+    document.getElementById('modalTitle').textContent = 'Edit Event';
+    
+    // Store the event ID for updating
+    document.getElementById('eventModal').dataset.eventId = eventId;
+    
+    // Show the modal
+    document.getElementById('eventModal').classList.add('active');
+}
+
+function viewCarBooking(bookingId) {
+    const booking = carBookings.find(b => b.id === bookingId);
+    if (!booking) return;
+    
+    // Populate the modal with booking data
+    document.getElementById('bookingUser').value = booking.user;
+    document.getElementById('bookingDate').value = normalizeDate(booking.date);
+    document.getElementById('bookingStart').value = formatTime(booking.startTime);
+    document.getElementById('bookingEnd').value = formatTime(booking.endTime);
+    document.getElementById('bookingPurpose').value = booking.purpose;
+    
+    // Store the booking ID for updating
+    document.getElementById('bookingModal').dataset.bookingId = bookingId;
+    
+    // Show the modal
+    document.getElementById('bookingModal').classList.add('active');
 }
 
 // ============= MEAL PLAN RENDERING =============
@@ -2228,33 +2267,61 @@ async function saveCarBooking() {
     const endTime = document.getElementById('bookingEnd').value;
     const purpose = document.getElementById('bookingPurpose').value;
     const user = document.getElementById('bookingUser').value;
+    const modal = document.getElementById('bookingModal');
+    const existingBookingId = modal.dataset.bookingId;
     
     if (!date || !startTime || !endTime || !purpose) {
         alert('Please fill in all fields');
         return;
     }
     
-    const booking = {
-        id: Date.now().toString(),
-        date,
-        startTime,
-        endTime,
-        purpose,
-        user: user
-    };
-    
-    if (GOOGLE_SHEETS_SCRIPT_URL) {
-        await saveCarBookingToSheets(booking);
-        // Explicitly render calendar after loading new data
-        renderCalendar();
+    if (existingBookingId) {
+        // Update existing booking
+        const bookingIndex = carBookings.findIndex(b => b.id === existingBookingId);
+        if (bookingIndex !== -1) {
+            carBookings[bookingIndex] = {
+                ...carBookings[bookingIndex],
+                date,
+                startTime,
+                endTime,
+                purpose,
+                user
+            };
+            
+            if (GOOGLE_SHEETS_SCRIPT_URL) {
+                await deleteCarBookingFromSheets(existingBookingId);
+                await saveCarBookingToSheets(carBookings[bookingIndex]);
+                renderCalendar();
+            } else {
+                saveData();
+                renderCarBookings();
+                renderCalendar();
+            }
+        }
+        delete modal.dataset.bookingId;
     } else {
-        carBookings.push(booking);
-        saveData();
-        renderCarBookings();
-        renderCalendar();
+        // Create new booking
+        const booking = {
+            id: Date.now().toString(),
+            date,
+            startTime,
+            endTime,
+            purpose,
+            user: user
+        };
+        
+        if (GOOGLE_SHEETS_SCRIPT_URL) {
+            await saveCarBookingToSheets(booking);
+            renderCalendar();
+        } else {
+            carBookings.push(booking);
+            saveData();
+            renderCarBookings();
+            renderCalendar();
+        }
     }
     
-    document.getElementById('bookingModal').classList.remove('active');
+    modal.classList.remove('active');
     document.getElementById('bookingDate').value = '';
     document.getElementById('bookingStart').value = '';
     document.getElementById('bookingEnd').value = '';
@@ -2283,36 +2350,65 @@ async function saveEvent() {
     const type = document.getElementById('eventType').value;
     const notes = document.getElementById('eventNotes').value;
     const user = document.getElementById('eventUser').value;
+    const modal = document.getElementById('eventModal');
+    const existingEventId = modal.dataset.eventId;
     
     if (!title || !date) {
         alert('Please fill in title and date');
         return;
     }
     
-    const event = {
-        id: Date.now().toString(),
-        title,
-        date,
-        type,
-        notes,
-        user: user,
-        created: new Date().toISOString()
-    };
-    
-    if (GOOGLE_SHEETS_SCRIPT_URL) {
-        await saveEventToSheets(event);
+    if (existingEventId) {
+        // Update existing event
+        const eventIndex = events.findIndex(e => e.id === existingEventId);
+        if (eventIndex !== -1) {
+            events[eventIndex] = {
+                ...events[eventIndex],
+                title,
+                date,
+                type,
+                notes,
+                user
+            };
+            
+            if (GOOGLE_SHEETS_SCRIPT_URL) {
+                // Delete old and create new (Google Sheets doesn't have update for events)
+                await syncWithSheets('deleteEvent', { id: existingEventId });
+                await saveEventToSheets(events[eventIndex]);
+            } else {
+                saveData();
+                renderCalendar();
+            }
+        }
+        delete modal.dataset.eventId;
     } else {
-        events.push(event);
-        saveData();
-        renderCalendar();
+        // Create new event
+        const event = {
+            id: Date.now().toString(),
+            title,
+            date,
+            type,
+            notes,
+            user: user,
+            created: new Date().toISOString()
+        };
+        
+        if (GOOGLE_SHEETS_SCRIPT_URL) {
+            await saveEventToSheets(event);
+        } else {
+            events.push(event);
+            saveData();
+            renderCalendar();
+        }
     }
     
-    document.getElementById('eventModal').classList.remove('active');
+    modal.classList.remove('active');
     document.getElementById('eventTitle').value = '';
     document.getElementById('eventDate').value = '';
     document.getElementById('eventType').value = 'holiday';
     document.getElementById('eventNotes').value = '';
     document.getElementById('eventUser').value = 'Everyone';
+    document.getElementById('modalTitle').textContent = 'Add Event';
 }
 
 // ============= NAVIGATION =============
