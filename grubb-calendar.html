@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0062)file:///C:/Users/Rob/Downloads/grubb-calendar-final-dates.html -->
+<!-- saved from url=(0066)file:///C:/Users/Rob/Downloads/grubb-calendar-ready-to-upload.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1796,6 +1796,7 @@ async function loadDataFromSheets() {
         console.log('📊 Data loaded from sheets:');
         console.log('Events:', events.length);
         console.log('Meals:', Object.keys(meals).length);
+        console.log('Meals data:', meals);
         console.log('Shopping:', shoppingList.length);
         console.log('Car Bookings:', carBookings.length);
         console.log('Car Bookings data:', carBookings);
@@ -2072,8 +2073,13 @@ function renderMealPlan() {
 }
 
 async function saveMeal(date, dinner) {
+    console.log('💾 Saving meal:', date, dinner);
     if (GOOGLE_SHEETS_SCRIPT_URL) {
         await saveMealToSheets(date, dinner);
+        console.log('✅ Meal saved to sheets');
+        // Force re-render after save
+        renderMealPlan();
+        renderCalendar();
     } else {
         meals[date] = { dinner };
         saveData();
