@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0062)file:///C:/Users/Rob/Downloads/grubb-calendar-booking-fix.html -->
+<!-- saved from url=(0056)file:///C:/Users/Rob/Downloads/grubb-calendar-debug.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1582,7 +1582,7 @@
 
     <script>
         // CONFIGURATION 
-const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPRnoQaoBPVQXufCyazRJtY1tq37zb0ZIoannhy65MiIR1R33T_PcUWsjIQDSBUrYS/exec'; // Paste your Google Apps Script Web App URL here
+const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvl9MnHYzglfY45wljuB7oirp7TMkb93qA5ejwiWy0g6FlK-bZuxqg9-TJUfOXPDYQ/exec'; // Paste your Google Apps Script Web App URL here
 
 // Password and session management
 const FAMILY_PASSWORD = 'finlakes';
@@ -1779,6 +1779,14 @@ async function loadDataFromSheets() {
         shoppingList = result.shoppingList || [];
         carBookings = result.carBookings || [];
         
+        // Debug logging
+        console.log('📊 Data loaded from sheets:');
+        console.log('Events:', events.length);
+        console.log('Meals:', Object.keys(meals).length);
+        console.log('Shopping:', shoppingList.length);
+        console.log('Car Bookings:', carBookings.length);
+        console.log('Car Bookings data:', carBookings);
+        
         // Render everything after data is loaded
         renderCalendar();
         renderMealPlan();
@@ -1887,6 +1895,11 @@ function renderMonthView(year, month) {
         const dayBookings = carBookings.filter(b => b.date === dateStr);
         const bankHoliday = ukBankHolidays[dateStr];
         const schoolHoliday = getSchoolHoliday(dateStr);
+        
+        // Debug: Log if this day has bookings
+        if (dayBookings.length > 0) {
+            console.log(`📅 ${dateStr} has ${dayBookings.length} car booking(s):`, dayBookings);
+        }
         
         let eventsHtml = '';
         
